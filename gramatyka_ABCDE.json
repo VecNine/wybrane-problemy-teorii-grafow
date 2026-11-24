@@ -1,0 +1,716 @@
+{
+  "grammar": {
+    "name": "Gramatyka grafowa ABCDE (siatki trójkątne z podziałem węzłów)",
+    "directed": false,
+    "danglingEdges": "forbid",
+    "labels": {
+      "nonterminals": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E"
+      ],
+      "terminals": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ]
+    },
+    "startGraph": {
+      "vertices": [
+        {
+          "index": 0,
+          "label": "A"
+        },
+        {
+          "index": 1,
+          "label": "B"
+        },
+        {
+          "index": 2,
+          "label": "C"
+        }
+      ],
+      "edges": [
+        {
+          "u": 0,
+          "v": 1
+        },
+        {
+          "u": 1,
+          "v": 2
+        },
+        {
+          "u": 0,
+          "v": 2
+        }
+      ]
+    },
+    "productions": [
+      {
+        "name": "P1",
+        "description": "A → trójkąt A–D–E (doklejenie nowego trójkąta w węźle A; A zachowuje swoich sąsiadów)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "A"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "A"
+            },
+            {
+              "index": 1,
+              "label": "D"
+            },
+            {
+              "index": 2,
+              "label": "E"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            },
+            {
+              "u": 1,
+              "v": 2
+            },
+            {
+              "u": 0,
+              "v": 2
+            }
+          ]
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": []
+      },
+      {
+        "name": "P2",
+        "description": "B → b – E (B staje się terminalem b; nowy węzeł E tworzy trójkąty z sąsiadami o etykiecie A)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "B"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "b"
+            },
+            {
+              "index": 1,
+              "label": "E"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            }
+          ]
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "A",
+            "connectTo": [
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P3",
+        "description": "C → c – D (C staje się terminalem c; nowy węzeł D łączy się z sąsiadami o etykietach B oraz b)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "C"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "c"
+            },
+            {
+              "index": 1,
+              "label": "D"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            }
+          ]
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "B",
+            "connectTo": [
+              1
+            ]
+          },
+          {
+            "leftVertex": 0,
+            "neighborLabel": "b",
+            "connectTo": [
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P4",
+        "description": "D → d – A (D staje się terminalem d; nowy węzeł A łączy się z sąsiadami o etykietach E i C)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "D"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "d"
+            },
+            {
+              "index": 1,
+              "label": "A"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            }
+          ]
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "E",
+            "connectTo": [
+              1
+            ]
+          },
+          {
+            "leftVertex": 0,
+            "neighborLabel": "C",
+            "connectTo": [
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P5",
+        "description": "E → e – B (E staje się terminalem e; nowy węzeł B łączy się z sąsiadami o etykiecie D)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "E"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "e"
+            },
+            {
+              "index": 1,
+              "label": "B"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            }
+          ]
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "D",
+            "connectTo": [
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P6",
+        "description": "A → B – C (podział węzła: obaj następcy dziedziczą wszystkich sąsiadów A)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "A"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "B"
+            },
+            {
+              "index": 1,
+              "label": "C"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            }
+          ]
+        },
+        "mapping": [],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "*",
+            "connectTo": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P7",
+        "description": "E → trójkąt e–C–D (e dziedziczy sąsiadów E; C łączy się dodatkowo z sąsiadami A, D z sąsiadami B)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "E"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "e"
+            },
+            {
+              "index": 1,
+              "label": "C"
+            },
+            {
+              "index": 2,
+              "label": "D"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            },
+            {
+              "u": 1,
+              "v": 2
+            },
+            {
+              "u": 0,
+              "v": 2
+            }
+          ]
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "A",
+            "connectTo": [
+              1
+            ]
+          },
+          {
+            "leftVertex": 0,
+            "neighborLabel": "B",
+            "connectTo": [
+              2
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P8",
+        "description": "B → kwadrat b–A–C–E (b dziedziczy sąsiadów B, przeciwległy wierzchołek C łączy się ze wszystkimi sąsiadami B)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "B"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "b"
+            },
+            {
+              "index": 1,
+              "label": "A"
+            },
+            {
+              "index": 2,
+              "label": "C"
+            },
+            {
+              "index": 3,
+              "label": "E"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            },
+            {
+              "u": 1,
+              "v": 2
+            },
+            {
+              "u": 2,
+              "v": 3
+            },
+            {
+              "u": 3,
+              "v": 0
+            }
+          ]
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "*",
+            "connectTo": [
+              2
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P9",
+        "description": "C → a – c (zakończenie z podziałem: c dziedziczy sąsiadów C, a łączy się dodatkowo z sąsiadami o etykiecie A lub a)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "C"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "a"
+            },
+            {
+              "index": 1,
+              "label": "c"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            }
+          ]
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 1
+          }
+        ],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "A",
+            "connectTo": [
+              0
+            ]
+          },
+          {
+            "leftVertex": 0,
+            "neighborLabel": "a",
+            "connectTo": [
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P10",
+        "description": "D → d – e (zakończenie z podziałem: oba terminale dziedziczą wszystkich sąsiadów D)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "D"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "d"
+            },
+            {
+              "index": 1,
+              "label": "e"
+            }
+          ],
+          "edges": [
+            {
+              "u": 0,
+              "v": 1
+            }
+          ]
+        },
+        "mapping": [],
+        "embedding": [
+          {
+            "leftVertex": 0,
+            "neighborLabel": "*",
+            "connectTo": [
+              0,
+              1
+            ]
+          }
+        ]
+      },
+      {
+        "name": "P11",
+        "description": "A → a (zakończenie)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "A"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "a"
+            }
+          ],
+          "edges": []
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": []
+      },
+      {
+        "name": "P12",
+        "description": "B → b (zakończenie)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "B"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "b"
+            }
+          ],
+          "edges": []
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": []
+      },
+      {
+        "name": "P13",
+        "description": "C → c (zakończenie)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "C"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "c"
+            }
+          ],
+          "edges": []
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": []
+      },
+      {
+        "name": "P14",
+        "description": "D → d (zakończenie)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "D"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "d"
+            }
+          ],
+          "edges": []
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": []
+      },
+      {
+        "name": "P15",
+        "description": "E → e (zakończenie)",
+        "left": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "E"
+            }
+          ],
+          "edges": []
+        },
+        "right": {
+          "vertices": [
+            {
+              "index": 0,
+              "label": "e"
+            }
+          ],
+          "edges": []
+        },
+        "mapping": [
+          {
+            "left": 0,
+            "right": 0
+          }
+        ],
+        "embedding": []
+      }
+    ]
+  }
+}
