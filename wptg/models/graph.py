@@ -70,8 +70,70 @@ class Graph:
         for v in self.vertices:
             G.add_node(v.index, label=v.label)
         for e in self.edges:
-            G.add_edge(e.u, e.v, label=e.label, weight=e.weight)
+            attrs = {}
+            if e.label is not None:
+                attrs["label"] = e.label
+            if e.weight is not None:
+                attrs["weight"] = e.weight
+            G.add_edge(e.u, e.v, **attrs)
         return G
+
+    def _compute_layout(self, G: Any) -> dict:
+        import math
+        import networkx as nx
+
+        if not self.vertices:
+            return {}
+
+        pos = {
+            v.index: (v.x, v.y)
+            for v in self.vertices
+            if v.x is not None and v.y is not None
+        }
+        if len(pos) == len(self.vertices):
+            return pos
+        if not pos:
+            if len(self.vertices) <= 4:
+                return nx.circular_layout(G)
+            return nx.spring_layout(G, seed=42, weight=None)
+
+        xs = [p[0] for p in pos.values()]
+        ys = [p[1] for p in pos.values()]
+        scale = max(max(xs) - min(xs), max(ys) - min(ys), 10.0) * 0.08
+        center_x = sum(xs) / len(xs)
+        center_y = sum(ys) / len(ys)
+
+        missing = [v.index for v in self.vertices if v.index not in pos]
+        total_missing = max(len(missing), 1)
+        placed_count = 0
+
+        while missing:
+            progressed = False
+            remaining = []
+            for v_idx in missing:
+                if self.directed:
+                    neighbor_ids = list(G.predecessors(v_idx)) + list(G.successors(v_idx))
+                else:
+                    neighbor_ids = list(G.neighbors(v_idx))
+                nbrs = [pos[n] for n in neighbor_ids if n in pos]
+                if nbrs:
+                    angle = 2 * math.pi * placed_count / total_missing
+                    cx = sum(p[0] for p in nbrs) / len(nbrs)
+                    cy = sum(p[1] for p in nbrs) / len(nbrs)
+                    pos[v_idx] = (cx + scale * math.cos(angle), cy + scale * math.sin(angle))
+                    placed_count += 1
+                    progressed = True
+                else:
+                    remaining.append(v_idx)
+            if not progressed:
+                for v_idx in remaining:
+                    angle = 2 * math.pi * placed_count / total_missing
+                    pos[v_idx] = (center_x + scale * math.cos(angle), center_y + scale * math.sin(angle))
+                    placed_count += 1
+                break
+            missing = remaining
+
+        return pos
 
     def visualize(
         self,
@@ -87,12 +149,7 @@ class Graph:
         G = self.to_networkx()
 
         if pos is None:
-            if self.vertices and all(v.x is not None and v.y is not None for v in self.vertices):
-                pos = {v.index: (v.x, v.y) for v in self.vertices}
-            elif len(self.vertices) <= 4:
-                pos = nx.circular_layout(G)
-            else:
-                pos = nx.spring_layout(G, seed=42)
+            pos = self._compute_layout(G)
 
         show_plot = False
         if ax is None:
@@ -153,6 +210,7 @@ class Graph:
 
         chart_title = title or self.name or "Graf"
         ax.set_title(chart_title, fontsize=13, fontweight="bold", pad=12)
+        ax.margins(0.15)
         ax.axis("off")
 
         if show_plot:

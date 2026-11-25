@@ -57,11 +57,18 @@ class ProductionApplier:
         if not success:
             return None
 
+        left_edge_pairs = set()
+        for pe in production.left.edges:
+            gu, gv = match[pe.u], match[pe.v]
+            key = (gu, gv) if new_graph.directed else (min(gu, gv), max(gu, gv))
+            left_edge_pairs.add(key)
+
         filtered_edges = []
         for e in new_graph.edges:
             if e.u in deleted_g_indices or e.v in deleted_g_indices:
                 continue
-            if e.u in matched_g_indices and e.v in matched_g_indices:
+            edge_key = (e.u, e.v) if new_graph.directed else (min(e.u, e.v), max(e.u, e.v))
+            if edge_key in left_edge_pairs:
                 continue
             filtered_edges.append(e)
 
@@ -72,7 +79,16 @@ class ProductionApplier:
             gv = right_to_g[r_edge.v]
             new_graph.edges.append(Edge(u=gu, v=gv, label=r_edge.label, weight=r_edge.weight))
 
-        new_graph.edges.extend(reconnected_edges)
+        existing_keys = {
+            (e.u, e.v) if new_graph.directed else (min(e.u, e.v), max(e.u, e.v))
+            for e in new_graph.edges
+        }
+        for edge in reconnected_edges:
+            key = (edge.u, edge.v) if new_graph.directed else (min(edge.u, edge.v), max(edge.u, edge.v))
+            if key not in existing_keys:
+                existing_keys.add(key)
+                new_graph.edges.append(edge)
+
         new_graph.vertices = [v for v in new_graph.vertices if v.index not in deleted_g_indices]
 
         return new_graph

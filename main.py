@@ -89,5 +89,30 @@ def run_demonstration():
     print("\n=== Historia transformacji w postaci tabel połączeń ===")
     ts2.print_history_tables(mode="connections")
 
+
+def run_custom_voronoi_sequence():
+    with open("graf_voronoi_ABCDE.json", "r", encoding="utf-8") as f:
+        g_voronoi = Graph.from_dict(json.load(f))
+    with open("gramatyka_ABCDE.json", "r", encoding="utf-8") as f:
+        gram_abcde = Grammar.from_dict(json.load(f))
+
+    print("\n=== Tryb własnej kolejności produkcji (Gramatyka ABCDE + Graf Voronoia) ===")
+    print("Dostępne produkcje:", ", ".join(p.name for p in gram_abcde.productions))
+    default_seq = "P1, P6, P11"
+
+    try:
+        user_seq = input(f"Podaj kolejność produkcji (np. P1, P6, P11) [Enter = {default_seq}]: ").strip()
+    except EOFError:
+        user_seq = ""
+
+    seq = user_seq if user_seq else default_seq
+    ts_custom = TransformationSystem(G=g_voronoi.copy(), T=gram_abcde)
+    ts_custom.apply(seq, selection_strategy=2, dangling_edges_handling=1)
+
+    print("\n=== Porównanie grafu początkowego i końcowego ===")
+    ts_custom.print_initial_and_final_tables(mode="connections")
+
+
 if __name__ == "__main__":
     run_demonstration()
+    run_custom_voronoi_sequence()

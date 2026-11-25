@@ -28,12 +28,13 @@ class GraphMatcher:
                     gu, gv = mapping[pe.u], mapping[pe.v]
                     edge_found = False
                     for ge in graph.edges:
+                        label_ok = pe.label is None or ge.label == pe.label
                         if graph.directed:
-                            if ge.u == gu and ge.v == gv:
+                            if ge.u == gu and ge.v == gv and label_ok:
                                 edge_found = True
                                 break
                         else:
-                            if (ge.u == gu and ge.v == gv) or (ge.u == gv and ge.v == gu):
+                            if ((ge.u == gu and ge.v == gv) or (ge.u == gv and ge.v == gu)) and label_ok:
                                 edge_found = True
                                 break
                     if not edge_found:
