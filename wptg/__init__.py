@@ -25,6 +25,7 @@ from wptg.transformation import (
     TransformationSystem,
     TransormationSystem,
 )
+from wptg.cli import JsonResourceLoader, TerminalApp
 
 __all__ = [
     "Vertex",
@@ -50,4 +51,6 @@ __all__ = [
     "IGraphTableFormatter",
     "GraphTableFormatter",
     "TransormationSystem",
+    "JsonResourceLoader",
+    "TerminalApp",
 ]

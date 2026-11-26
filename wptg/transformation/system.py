@@ -28,15 +28,25 @@ class TransformationSystem:
         self.matcher = matcher or GraphMatcher()
         self.applier = applier or ProductionApplier()
 
-    def _normalize_productions(self, productions: Union[List[Union[Production, str]], str]) -> List[Union[Production, str]]:
+    def _normalize_productions(self, productions: Union[List[Union[Production, str, int]], str]) -> List[Union[Production, str]]:
         if isinstance(productions, str):
             cleaned = productions.replace("->", " ").replace(",", " ").replace(";", " ")
             return [token.strip() for token in cleaned.split() if token.strip()]
-        return list(productions)
+        return [str(item) if isinstance(item, int) else item for item in productions]
 
-    def _resolve_production(self, prod: Union[Production, str]) -> Production:
+    def _resolve_production(self, prod: Union[Production, str, int]) -> Production:
+        if isinstance(prod, int):
+            prod = str(prod)
         if isinstance(prod, str):
-            found = self.T.get_production(prod)
+            token = prod.strip()
+            found = self.T.get_production(token)
+            if found is None:
+                target = f"P{token}" if token.isdigit() else token
+                target_lower = target.lower()
+                for candidate in self.T.productions:
+                    if candidate.name.lower() == target_lower:
+                        found = candidate
+                        break
             if found is None:
                 raise ValueError(f"Production {prod} not found in grammar {self.T.name}")
             return found
@@ -80,17 +90,17 @@ class TransformationSystem:
 
     def apply(
         self,
-        productions: Union[List[Union[Production, str]], str],
+        productions: Union[List[Union[Production, str, int]], str],
         selection_strategy: Optional[Union[SelectionStrategy, int]] = None,
         dangling_edges_handling: Optional[Union[DanglingEdgesHandling, int]] = None
     ) -> List[Tuple[Production, Graph]]:
         sel_strat = self._resolve_selection_strategy(selection_strategy)
         normalized_productions = self._normalize_productions(productions)
+        resolved_productions = [self._resolve_production(item) for item in normalized_productions]
 
         newly_applied: List[Tuple[Production, Graph]] = []
 
-        for item in normalized_productions:
-            prod = self._resolve_production(item)
+        for prod in resolved_productions:
             dang_strat = self._resolve_dangling_strategy(dangling_edges_handling, prod)
             matches = self.matcher.find_matches(self.G, prod.left)
             selected_matches = sel_strat.select(matches)
@@ -108,7 +118,7 @@ class TransformationSystem:
 
         return newly_applied
 
-    def visualize_history(self, figsize_per_step: tuple = (4.5, 3.5), include_initial: bool = False):
+    def visualize_history(self, figsize_per_step: tuple = (5.5, 4.5), include_initial: bool = False):
         import matplotlib.pyplot as plt
 
         steps: List[Tuple[str, Graph]] = []
@@ -139,7 +149,7 @@ class TransformationSystem:
         plt.tight_layout()
         plt.show()
 
-    def visualize_initial_and_final(self, figsize: tuple = (13, 5)) -> None:
+    def visualize_initial_and_final(self, figsize: tuple = (15, 7)) -> None:
         import matplotlib.pyplot as plt
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)

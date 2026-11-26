@@ -78,67 +78,95 @@ class Graph:
             G.add_edge(e.u, e.v, **attrs)
         return G
 
+    def _neighbor_ids(self, G: Any, v_idx: int) -> List[int]:
+        if self.directed:
+            return list(G.predecessors(v_idx)) + list(G.successors(v_idx))
+        return list(G.neighbors(v_idx))
+
+    def _build_initial_positions(self, G: Any, raw_pos: dict) -> dict:
+        import math
+
+        xs = [p[0] for p in raw_pos.values()]
+        ys = [p[1] for p in raw_pos.values()]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        span = max(max_x - min_x, max_y - min_y, 1.0)
+        n = len(self.vertices)
+        total_missing = max(n - len(raw_pos), 1)
+        missing_idx = 0
+        init_pos = {}
+
+        for v in self.vertices:
+            if v.index in raw_pos:
+                nx_coord = 2 * (raw_pos[v.index][0] - min_x) / span - 1.0
+                ny_coord = 2 * (raw_pos[v.index][1] - min_y) / span - 1.0
+                init_pos[v.index] = (nx_coord, ny_coord)
+            else:
+                angle = 2 * math.pi * missing_idx / total_missing
+                radius = 0.35 + 0.15 * (missing_idx % 3)
+                nbrs = [raw_pos[nb] for nb in self._neighbor_ids(G, v.index) if nb in raw_pos]
+                if nbrs:
+                    cx = 2 * (sum(p[0] for p in nbrs) / len(nbrs) - min_x) / span - 1.0
+                    cy = 2 * (sum(p[1] for p in nbrs) / len(nbrs) - min_y) / span - 1.0
+                else:
+                    cx, cy = 0.0, 0.0
+                init_pos[v.index] = (cx + radius * math.cos(angle), cy + radius * math.sin(angle))
+                missing_idx += 1
+
+        return init_pos
+
+    def _separate_overlapping_nodes(self, pos: dict, min_dist: float) -> dict:
+        import math
+
+        mutable = {k: [float(v[0]), float(v[1])] for k, v in pos.items()}
+        keys = sorted(mutable.keys())
+
+        for _ in range(50):
+            for i, u in enumerate(keys):
+                for v in keys[i + 1:]:
+                    dx = mutable[u][0] - mutable[v][0]
+                    dy = mutable[u][1] - mutable[v][1]
+                    dist = math.hypot(dx, dy)
+                    if dist < 1e-6:
+                        dx, dy, dist = 1.0, 0.5, math.hypot(1.0, 0.5)
+                    if dist < min_dist:
+                        push = (min_dist - dist) * 0.45
+                        ux, uy = (dx / dist) * push, (dy / dist) * push
+                        mutable[u][0] += ux
+                        mutable[u][1] += uy
+                        mutable[v][0] -= ux
+                        mutable[v][1] -= uy
+
+        return {k: tuple(v) for k, v in mutable.items()}
+
     def _compute_layout(self, G: Any) -> dict:
         import math
         import networkx as nx
 
-        if not self.vertices:
+        n = len(self.vertices)
+        if not n:
             return {}
 
-        pos = {
+        raw_pos = {
             v.index: (v.x, v.y)
             for v in self.vertices
             if v.x is not None and v.y is not None
         }
-        if len(pos) == len(self.vertices):
-            return pos
-        if not pos:
-            if len(self.vertices) <= 4:
-                return nx.circular_layout(G)
-            return nx.spring_layout(G, seed=42, weight=None)
+        if len(raw_pos) == n:
+            return raw_pos
+        if n <= 4 and not raw_pos:
+            return nx.circular_layout(G)
 
-        xs = [p[0] for p in pos.values()]
-        ys = [p[1] for p in pos.values()]
-        scale = max(max(xs) - min(xs), max(ys) - min(ys), 10.0) * 0.08
-        center_x = sum(xs) / len(xs)
-        center_y = sum(ys) / len(ys)
-
-        missing = [v.index for v in self.vertices if v.index not in pos]
-        total_missing = max(len(missing), 1)
-        placed_count = 0
-
-        while missing:
-            progressed = False
-            remaining = []
-            for v_idx in missing:
-                if self.directed:
-                    neighbor_ids = list(G.predecessors(v_idx)) + list(G.successors(v_idx))
-                else:
-                    neighbor_ids = list(G.neighbors(v_idx))
-                nbrs = [pos[n] for n in neighbor_ids if n in pos]
-                if nbrs:
-                    angle = 2 * math.pi * placed_count / total_missing
-                    cx = sum(p[0] for p in nbrs) / len(nbrs)
-                    cy = sum(p[1] for p in nbrs) / len(nbrs)
-                    pos[v_idx] = (cx + scale * math.cos(angle), cy + scale * math.sin(angle))
-                    placed_count += 1
-                    progressed = True
-                else:
-                    remaining.append(v_idx)
-            if not progressed:
-                for v_idx in remaining:
-                    angle = 2 * math.pi * placed_count / total_missing
-                    pos[v_idx] = (center_x + scale * math.cos(angle), center_y + scale * math.sin(angle))
-                    placed_count += 1
-                break
-            missing = remaining
-
-        return pos
+        init_pos = self._build_initial_positions(G, raw_pos) if raw_pos else None
+        k_val = 2.6 / math.sqrt(max(n, 1))
+        pos = nx.spring_layout(G, pos=init_pos, k=k_val, iterations=350, seed=42, weight=None)
+        min_dist = 1.6 / math.sqrt(max(n, 2))
+        return self._separate_overlapping_nodes(pos, min_dist)
 
     def visualize(
         self,
         title: Optional[str] = None,
-        figsize: tuple = (7, 5),
+        figsize: Optional[tuple] = None,
         ax: Optional[Any] = None,
         pos: Optional[dict] = None,
         node_colors: Optional[dict[int, str]] = None
@@ -150,6 +178,13 @@ class Graph:
 
         if pos is None:
             pos = self._compute_layout(G)
+
+        n = len(self.vertices)
+        if figsize is None:
+            figsize = (
+                max(9.0, min(14.5, 7.5 + n * 0.3)),
+                max(7.0, min(10.5, 5.5 + n * 0.22)),
+            )
 
         show_plot = False
         if ax is None:
@@ -163,11 +198,14 @@ class Graph:
             for v in self.vertices
         ]
 
+        node_sz = 1350 if n > 8 else 1600
+        node_font_sz = 10 if n > 8 else 11
+
         nx.draw_networkx_nodes(
             G, pos,
             ax=ax,
             node_color=colors,
-            node_size=1600,
+            node_size=node_sz,
             edgecolors="#1e40af",
             linewidths=2
         )
@@ -175,7 +213,7 @@ class Graph:
             G, pos,
             labels=labels,
             ax=ax,
-            font_size=11,
+            font_size=node_font_sz,
             font_weight="bold",
             font_color="#0f172a"
         )
@@ -204,7 +242,7 @@ class Graph:
                 edge_labels=edge_labels,
                 ax=ax,
                 font_color="#dc2626",
-                font_size=10,
+                font_size=9,
                 font_weight="bold"
             )
 
